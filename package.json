@@ -1,0 +1,19 @@
+{
+  "name": "threejs-typescript-template",
+  "version": "1.0.0",
+  "description": "A Three.js TypeScript template with axes, points, and lines",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "http-server . -p 3000",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "@types/three": "^0.183.0",
+    "three": "^0.158.0"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1",
+    "typescript": "^5.0.0"
+  }
+}
