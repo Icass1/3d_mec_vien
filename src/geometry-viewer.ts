@@ -4,180 +4,275 @@ import { Point } from "./Point";
 import type { Line } from "./Line";
 
 export class GeometryViewer {
-  private readonly scene: THREE.Scene;
-  private readonly camera: THREE.PerspectiveCamera;
-  private readonly renderer: THREE.WebGLRenderer;
-  private readonly controls: OrbitControls;
-  private readonly points: Point[] = [];
-  private readonly lines: Line[] = [];
+    private readonly scene: THREE.Scene;
+    private readonly camera: THREE.PerspectiveCamera;
+    private readonly renderer: THREE.WebGLRenderer;
+    private readonly controls: OrbitControls;
+    private readonly points: Point[] = [];
+    private readonly lines: Line[] = [];
 
-  private pointGeometry!: THREE.BufferGeometry;
-  private lineGeometry!: THREE.BufferGeometry;
-  private readonly pointPositions: THREE.Vector3[] = [];
-  private readonly linePositions: THREE.Vector3[] = [];
+    private readonly pointMeshes: THREE.Mesh[] = [];
+    private readonly lineMeshes: THREE.Mesh[] = [];
+    private readonly guideLineMeshes: THREE.Mesh[] = [];
 
-  constructor(container: HTMLElement) {
-    this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x0b1020);
+    private readonly pointPositions: THREE.Vector3[] = [];
 
-    this.camera = new THREE.PerspectiveCamera(
-      10,
-      container.clientWidth / container.clientHeight,
-      0.1,
-      1000,
-    );
-    this.camera.position.set(5, 5, 5);
-    this.camera.up.set(0, 0, 1);
+    private readonly LINE_DIAMETER = 0.04;
+    private readonly POINT_DIAMETER = 0.12;
 
-    this.renderer = new THREE.WebGLRenderer({ antialias: true });
-    this.renderer.setPixelRatio(window.devicePixelRatio);
-    this.renderer.setSize(container.clientWidth, container.clientHeight);
-    container.appendChild(this.renderer.domElement);
+    constructor(container: HTMLElement) {
+        this.scene = new THREE.Scene();
+        this.scene.background = new THREE.Color(0x1a1a2e);
 
-    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-    this.controls.enableDamping = true;
+        this.camera = new THREE.PerspectiveCamera(
+            45,
+            container.clientWidth / container.clientHeight,
+            0.1,
+            1000
+        );
+        this.camera.position.set(6, 6, 6);
+        this.camera.up.set(0, 0, 1);
 
-    this.setupLights();
-    this.setupHelpers();
-    this.setupGeometries();
+        this.renderer = new THREE.WebGLRenderer({ antialias: true });
+        this.renderer.setPixelRatio(window.devicePixelRatio);
+        this.renderer.setSize(container.clientWidth, container.clientHeight);
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        container.appendChild(this.renderer.domElement);
 
-    this.resize();
-    this.update();
-  }
+        this.controls = new OrbitControls(
+            this.camera,
+            this.renderer.domElement
+        );
+        this.controls.enableDamping = true;
+        this.controls.dampingFactor = 0.05;
 
-  private setupLights(): void {
-    const ambient = new THREE.AmbientLight(0xffffff, 0.4);
-    this.scene.add(ambient);
-    const dir = new THREE.DirectionalLight(0xffffff, 0.8);
-    dir.position.set(5, 10, 7);
-    this.scene.add(dir);
-  }
+        this.setupLights();
+        this.setupHelpers();
 
-  private setupHelpers(): void {
-    const axes = new THREE.AxesHelper(5);
-    this.scene.add(axes);
-  }
-
-  private setupGeometries(): void {
-    const pointMaterial = new THREE.PointsMaterial({
-      color: 0xffcc00,
-      size: 0.08,
-      sizeAttenuation: true,
-    });
-    this.pointGeometry = new THREE.BufferGeometry();
-    const points = new THREE.Points(this.pointGeometry, pointMaterial);
-    this.scene.add(points);
-
-    const lineMaterial = new THREE.LineBasicMaterial({
-      color: 0x66ccff,
-      linewidth: 2,
-    });
-    this.lineGeometry = new THREE.BufferGeometry();
-    const lines = new THREE.LineSegments(this.lineGeometry, lineMaterial);
-    this.scene.add(lines);
-  }
-
-  addPoint(x: number, y: number, z: number): Point {
-    const position = new THREE.Vector3(x, y, z);
-    const index = this.points.length;
-    this.points.push(new Point(position, index));
-    this.pointPositions.push(position);
-    this.updatePointsGeometry();
-    this.updateLinesGeometry();
-    return this.points[index];
-  }
-
-  addLine(line: Line): void {
-    if (
-      line.startIndex >= this.points.length ||
-      line.endIndex >= this.points.length
-    ) {
-      throw new Error("Invalid point indices");
-    }
-    this.lines.push(line);
-    this.updateLinesGeometry();
-  }
-
-  private updatePointsGeometry(): void {
-    if (this.pointPositions.length === 0) return;
-    const array = new Float32Array(this.pointPositions.length * 3);
-    this.pointPositions.forEach((p, i) => {
-      array[i * 3 + 0] = p.x;
-      array[i * 3 + 1] = p.y;
-      array[i * 3 + 2] = p.z;
-    });
-    this.pointGeometry.setAttribute(
-      "position",
-      new THREE.BufferAttribute(array, 3),
-    );
-    this.pointGeometry.attributes.position.needsUpdate = true;
-    this.pointGeometry.computeBoundingSphere();
-  }
-
-  private updateLinesGeometry(): void {
-    // Rebuild all line positions
-    this.linePositions.length = 0;
-
-    // Add guide lines for each point
-    for (const point of this.points) {
-      const x = point.position.x;
-      const y = point.position.y;
-      const z = point.position.z;
-
-      const base = new THREE.Vector3(x, y, 0);
-      const xAxis = new THREE.Vector3(x, 0, 0);
-      const yAxis = new THREE.Vector3(0, y, 0);
-
-      // Vertical line from (x,y,z) to (x,y,0)
-      this.linePositions.push(point.position.clone(), base.clone());
-
-      // Line from (x,y,0) to (x,0,0)
-      this.linePositions.push(base.clone(), xAxis.clone());
-
-      // Line from (x,y,0) to (0,y,0)
-      this.linePositions.push(base.clone(), yAxis.clone());
+        this.resize();
+        this.update();
     }
 
-    // Add user-defined lines
-    for (const line of this.lines) {
-      const start = this.pointPositions[line.startIndex];
-      const end = this.pointPositions[line.endIndex];
-      this.linePositions.push(start.clone(), end.clone());
+    private setupLights(): void {
+        const ambient = new THREE.AmbientLight(0x404060, 0.6);
+        this.scene.add(ambient);
+
+        const mainLight = new THREE.DirectionalLight(0xffffff, 1.2);
+        mainLight.position.set(8, 8, 12);
+        mainLight.castShadow = true;
+        mainLight.shadow.mapSize.width = 2048;
+        mainLight.shadow.mapSize.height = 2048;
+        mainLight.shadow.camera.near = 0.5;
+        mainLight.shadow.camera.far = 50;
+        mainLight.shadow.camera.left = -10;
+        mainLight.shadow.camera.right = 10;
+        mainLight.shadow.camera.top = 10;
+        mainLight.shadow.camera.bottom = -10;
+        this.scene.add(mainLight);
+
+        const fillLight = new THREE.DirectionalLight(0x6080ff, 0.4);
+        fillLight.position.set(-5, -5, 5);
+        this.scene.add(fillLight);
+
+        const rimLight = new THREE.DirectionalLight(0xff8060, 0.3);
+        rimLight.position.set(0, -8, 3);
+        this.scene.add(rimLight);
     }
 
-    if (this.linePositions.length === 0) {
-      this.lineGeometry.setAttribute(
-        "position",
-        new THREE.BufferAttribute(new Float32Array(0), 3),
-      );
-      return;
+    private setupHelpers(): void {
+        const gridHelper = new THREE.GridHelper(10, 20, 0x444466, 0x333355);
+        (gridHelper as THREE.GridHelper).rotation.x = Math.PI / 2;
+        gridHelper.position.z = -0.01;
+        this.scene.add(gridHelper);
+
+        const axesHelper = new THREE.AxesHelper(5);
+        this.scene.add(axesHelper);
     }
-    const array = new Float32Array(this.linePositions.length * 3);
-    this.linePositions.forEach((p, i) => {
-      array[i * 3 + 0] = p.x;
-      array[i * 3 + 1] = p.y;
-      array[i * 3 + 2] = p.z;
-    });
-    this.lineGeometry.setAttribute(
-      "position",
-      new THREE.BufferAttribute(array, 3),
-    );
-    this.lineGeometry.attributes.position.needsUpdate = true;
-    this.lineGeometry.computeBoundingSphere();
-  }
 
-  resize(): void {
-    const width = window.innerWidth;
-    const height = window.innerHeight;
-    this.camera.aspect = width / height;
-    this.camera.updateProjectionMatrix();
-    this.renderer.setSize(width, height);
-  }
+    private createCylinderBetweenPoints(
+        start: THREE.Vector3,
+        end: THREE.Vector3,
+        diameter: number,
+        color: number
+    ): THREE.Mesh {
+        const direction = new THREE.Vector3().subVectors(end, start);
+        const length = direction.length();
 
-  public update(): void {
-    this.updatePointsGeometry();
-    this.updateLinesGeometry();
-    this.controls.update();
-    this.renderer.render(this.scene, this.camera);
-  }
+        if (length < 0.0001) {
+            const geometry = new THREE.SphereGeometry(diameter / 2, 16, 16);
+            const material = new THREE.MeshStandardMaterial({
+                color: color,
+                roughness: 0.3,
+                metalness: 0.6,
+            });
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.position.copy(start);
+            return mesh;
+        }
+
+        const geometry = new THREE.CylinderGeometry(
+            diameter / 2,
+            diameter / 2,
+            length,
+            12
+        );
+        const material = new THREE.MeshStandardMaterial({
+            color: color,
+            roughness: 0.3,
+            metalness: 0.6,
+            side: THREE.DoubleSide,
+        });
+        const mesh = new THREE.Mesh(geometry, material);
+
+        const midpoint = new THREE.Vector3()
+            .addVectors(start, end)
+            .multiplyScalar(0.5);
+        mesh.position.copy(midpoint);
+
+        const axis = new THREE.Vector3(0, 1, 0);
+        const quaternion = new THREE.Quaternion().setFromUnitVectors(
+            axis,
+            direction.normalize()
+        );
+        mesh.quaternion.copy(quaternion);
+
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+
+        return mesh;
+    }
+
+    private createPointMesh(position: THREE.Vector3): THREE.Mesh {
+        const geometry = new THREE.SphereGeometry(
+            this.POINT_DIAMETER / 2,
+            24,
+            24
+        );
+        const material = new THREE.MeshStandardMaterial({
+            color: 0xffcc00,
+            roughness: 0.2,
+            metalness: 0.8,
+            emissive: 0xffaa00,
+            emissiveIntensity: 0.2,
+        });
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.position.copy(position);
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        return mesh;
+    }
+
+    addPoint(x: number, y: number, z: number): Point {
+        const position = new THREE.Vector3(x, y, z);
+        const index = this.points.length;
+        const point = new Point(position, index);
+        this.points.push(point);
+        this.pointPositions.push(position);
+
+        const pointMesh = this.createPointMesh(position);
+        this.pointMeshes.push(pointMesh);
+        this.scene.add(pointMesh);
+
+        this.updateLinesGeometry();
+        return point;
+    }
+
+    addLine(line: Line): void {
+        if (
+            line.startIndex >= this.points.length ||
+            line.endIndex >= this.points.length
+        ) {
+            throw new Error("Invalid point indices");
+        }
+        this.lines.push(line);
+        this.updateLinesGeometry();
+    }
+
+    private updatePointsGeometry(): void {
+        for (let i = 0; i < this.points.length; i++) {
+            this.pointMeshes[i].position.copy(this.points[i].position);
+        }
+    }
+
+    private updateLinesGeometry(): void {
+        for (const mesh of this.guideLineMeshes) {
+            this.scene.remove(mesh);
+            mesh.geometry.dispose();
+            (mesh.material as THREE.Material).dispose();
+        }
+        this.guideLineMeshes.length = 0;
+
+        for (const mesh of this.lineMeshes) {
+            this.scene.remove(mesh);
+            mesh.geometry.dispose();
+            (mesh.material as THREE.Material).dispose();
+        }
+        this.lineMeshes.length = 0;
+
+        for (const point of this.points) {
+            const x = point.position.x;
+            const y = point.position.y;
+
+            const base = new THREE.Vector3(x, y, 0);
+            const xAxis = new THREE.Vector3(x, 0, 0);
+            const yAxis = new THREE.Vector3(0, y, 0);
+
+            const guideLine = this.createCylinderBetweenPoints(
+                point.position,
+                base,
+                this.LINE_DIAMETER * 0.5,
+                0x555577
+            );
+            this.guideLineMeshes.push(guideLine);
+            this.scene.add(guideLine);
+
+            const guideLine2 = this.createCylinderBetweenPoints(
+                base,
+                xAxis,
+                this.LINE_DIAMETER * 0.5,
+                0x555577
+            );
+            this.guideLineMeshes.push(guideLine2);
+            this.scene.add(guideLine2);
+
+            const guideLine3 = this.createCylinderBetweenPoints(
+                base,
+                yAxis,
+                this.LINE_DIAMETER * 0.5,
+                0x555577
+            );
+            this.guideLineMeshes.push(guideLine3);
+            this.scene.add(guideLine3);
+        }
+
+        for (const line of this.lines) {
+            const start = this.pointPositions[line.startIndex];
+            const end = this.pointPositions[line.endIndex];
+
+            const lineMesh = this.createCylinderBetweenPoints(
+                start,
+                end,
+                this.LINE_DIAMETER,
+                0x66ccff
+            );
+            this.lineMeshes.push(lineMesh);
+            this.scene.add(lineMesh);
+        }
+    }
+
+    resize(): void {
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        this.camera.aspect = width / height;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(width, height);
+    }
+
+    public update(): void {
+        this.updatePointsGeometry();
+        this.updateLinesGeometry();
+        this.controls.update();
+        this.renderer.render(this.scene, this.camera);
+    }
 }

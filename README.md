@@ -13,19 +13,22 @@ A fully typed Three.js template with custom axes, points, and lines.
 ## Setup
 
 1. Install dependencies:
-   ```bash
-   npm install
-   ```
+
+    ```bash
+    npm install
+    ```
 
 2. Build the project:
-   ```bash
-   npm run build
-   ```
+
+    ```bash
+    npm run build
+    ```
 
 3. Start a local server:
-   ```bash
-   npm start
-   ```
+
+    ```bash
+    npm start
+    ```
 
 4. Open your browser to `http://localhost:3000`
 
@@ -37,13 +40,16 @@ The template includes a `SceneManager` class that handles the Three.js scene set
 const sceneManager = new SceneManager();
 
 // Add a point
-const point = sceneManager.addPoint({ x: 1, y: 1, z: 1 }, new THREE.Color(0xff0000));
+const point = sceneManager.addPoint(
+    { x: 1, y: 1, z: 1 },
+    new THREE.Color(0xff0000)
+);
 
 // Add a line between two points
 const line = sceneManager.addLine(
-  { x: 0, y: 0, z: 0 },
-  { x: 1, y: 1, z: 1 },
-  new THREE.Color(0x0000ff)
+    { x: 0, y: 0, z: 0 },
+    { x: 1, y: 1, z: 1 },
+    new THREE.Color(0x0000ff)
 );
 ```
 
@@ -60,16 +66,16 @@ You can customize the axis appearance by modifying the `AxisConfig` in `main.ts`
 
 ```typescript
 const axisConfig: AxisConfig = {
-  size: 5,
-  colors: {
-    x: new THREE.Color(0xff0000), // Red
-    y: new THREE.Color(0x00ff00), // Green
-    z: new THREE.Color(0x0000ff)  // Blue
-  },
-  labels: {
-    x: 'X',
-    y: 'Y',
-    z: 'Z'
-  }
+    size: 5,
+    colors: {
+        x: new THREE.Color(0xff0000), // Red
+        y: new THREE.Color(0x00ff00), // Green
+        z: new THREE.Color(0x0000ff), // Blue
+    },
+    labels: {
+        x: "X",
+        y: "Y",
+        z: "Z",
+    },
 };
 ```
