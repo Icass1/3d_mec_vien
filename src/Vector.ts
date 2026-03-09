@@ -1,3 +1,5 @@
+import * as THREE from "three";
+
 export class Vector {
     x: number;
     y: number;
@@ -13,6 +15,10 @@ export class Vector {
         return new Vector(this.x + other.x, this.y + other.y, this.z + other.z);
     }
 
+    toVector3(): THREE.Vector3 {
+        return new THREE.Vector3(this.x, this.y, this.z);
+    }
+
     subtract(other: Vector): Vector {
         return new Vector(this.x - other.x, this.y - other.y, this.z - other.z);
     }
@@ -23,6 +29,12 @@ export class Vector {
 
     dot(other: Vector): number {
         return this.x * other.x + this.y * other.y + this.z * other.z;
+    }
+
+    set(x: number, y: number, z: number) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
     }
 
     cross(other: Vector): Vector {

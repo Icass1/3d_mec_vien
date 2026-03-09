@@ -1,5 +1,5 @@
-export enum Axis {
-    X = 1,
-    Y,
-    Z,
-}
+export const Axis = {
+    X: 1,
+    Y: 2,
+    Z: 3,
+} as const;

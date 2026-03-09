@@ -4,8 +4,7 @@ import { Point } from "./Point";
 import { Vector } from "./Vector";
 import { VectorPanel } from "./VectorPanel";
 import type { Line } from "./Line";
-
-const COLORS = ["blue", "red", "green", "yellow", "orange", "white"];
+import { COLORS } from "./constants";
 
 export class GeometryViewer {
     private readonly scene: THREE.Scene;
@@ -175,14 +174,14 @@ export class GeometryViewer {
     }
 
     addPoint(x: number, y: number, z: number, name: string): Point {
-        const position = new THREE.Vector3(x, y, z);
+        const position = new Vector(x, y, z);
         const index = this.points.length;
         const point = new Point(position, COLORS[index], name, index);
         this.points.push(point);
-        this.pointPositions.push(position);
+        this.pointPositions.push(position.toVector3());
 
         const pointMesh = this.createPointMesh(
-            position,
+            position.toVector3(),
             new THREE.Color(point.color)
         );
         this.pointMeshes.push(pointMesh);
@@ -249,6 +248,7 @@ export class GeometryViewer {
     private updatePointsGeometry(): void {
         for (let i = 0; i < this.points.length; i++) {
             this.pointMeshes[i].position.copy(this.points[i].position);
+            this.pointPositions[i] = this.points[i].position.toVector3();
         }
     }
 
@@ -276,7 +276,7 @@ export class GeometryViewer {
             const yAxis = new THREE.Vector3(0, y, 0);
 
             const guideLine = this.createCylinderBetweenPoints(
-                point.position,
+                point.position.toVector3(),
                 base,
                 this.LINE_DIAMETER * 0.5,
                 0x555577
