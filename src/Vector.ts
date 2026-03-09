@@ -39,7 +39,7 @@ export class Vector {
 
     normalize(): Vector {
         const len = this.length();
-        if (len === 0) return new Vector(0, 0, 0);
+        if (len === 0) return new Vector(1, 0, 0);
         return this.scale(1 / len);
     }
 

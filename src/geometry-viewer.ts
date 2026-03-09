@@ -1,7 +1,11 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { Point } from "./Point";
+import { Vector } from "./Vector";
+import { VectorPanel } from "./VectorPanel";
 import type { Line } from "./Line";
+
+const COLORS = ["blue", "red", "green", "yellow", "orange", "white"];
 
 export class GeometryViewer {
     private readonly scene: THREE.Scene;
@@ -10,10 +14,12 @@ export class GeometryViewer {
     private readonly controls: OrbitControls;
     private readonly points: Point[] = [];
     private readonly lines: Line[] = [];
+    private readonly vectorPanel: VectorPanel;
 
     private readonly pointMeshes: THREE.Mesh[] = [];
     private readonly lineMeshes: THREE.Mesh[] = [];
     private readonly guideLineMeshes: THREE.Mesh[] = [];
+    private readonly arrowHelpers: THREE.ArrowHelper[] = [];
 
     private readonly pointPositions: THREE.Vector3[] = [];
 
@@ -46,6 +52,8 @@ export class GeometryViewer {
         );
         this.controls.enableDamping = true;
         this.controls.dampingFactor = 0.05;
+
+        this.vectorPanel = new VectorPanel(container);
 
         this.setupLights();
         this.setupHelpers();
@@ -143,17 +151,20 @@ export class GeometryViewer {
         return mesh;
     }
 
-    private createPointMesh(position: THREE.Vector3): THREE.Mesh {
+    private createPointMesh(
+        position: THREE.Vector3,
+        color: THREE.Color
+    ): THREE.Mesh {
         const geometry = new THREE.SphereGeometry(
             this.POINT_DIAMETER / 2,
             24,
             24
         );
         const material = new THREE.MeshStandardMaterial({
-            color: 0xffcc00,
+            color: color,
             roughness: 0.2,
             metalness: 0.8,
-            emissive: 0xffaa00,
+            emissive: color,
             emissiveIntensity: 0.2,
         });
         const mesh = new THREE.Mesh(geometry, material);
@@ -163,14 +174,17 @@ export class GeometryViewer {
         return mesh;
     }
 
-    addPoint(x: number, y: number, z: number): Point {
+    addPoint(x: number, y: number, z: number, name: string): Point {
         const position = new THREE.Vector3(x, y, z);
         const index = this.points.length;
-        const point = new Point(position, index);
+        const point = new Point(position, COLORS[index], name, index);
         this.points.push(point);
         this.pointPositions.push(position);
 
-        const pointMesh = this.createPointMesh(position);
+        const pointMesh = this.createPointMesh(
+            position,
+            new THREE.Color(point.color)
+        );
         this.pointMeshes.push(pointMesh);
         this.scene.add(pointMesh);
 
@@ -187,6 +201,49 @@ export class GeometryViewer {
         }
         this.lines.push(line);
         this.updateLinesGeometry();
+    }
+
+    addArrow(
+        origin: THREE.Vector3,
+        direction: THREE.Vector3,
+        color: string
+    ): THREE.ArrowHelper {
+        const dir = direction.clone().normalize();
+        const length = direction.length();
+        const hex = new THREE.Color(color).getHex();
+
+        const arrowHelper = new THREE.ArrowHelper(
+            dir,
+            origin,
+            length,
+            hex,
+            length * 0.15,
+            length * 0.1
+        );
+        this.arrowHelpers.push(arrowHelper);
+        this.scene.add(arrowHelper);
+
+        return arrowHelper;
+    }
+
+    updateArrow(
+        arrowHelper: THREE.ArrowHelper,
+        origin: THREE.Vector3,
+        direction: THREE.Vector3
+    ): void {
+        const dir = direction.clone().normalize();
+        const length = direction.length();
+
+        arrowHelper.setDirection(dir);
+        arrowHelper.setLength(length, length * 0.15, length * 0.1);
+        arrowHelper.position.copy(origin);
+    }
+
+    clearArrows(): void {
+        for (const arrow of this.arrowHelpers) {
+            this.scene.remove(arrow);
+        }
+        this.arrowHelpers.length = 0;
     }
 
     private updatePointsGeometry(): void {
@@ -267,6 +324,29 @@ export class GeometryViewer {
         this.camera.aspect = width / height;
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(width, height);
+    }
+
+    public setCameraLookAt(
+        target: Vector | THREE.Vector3,
+        direction: Vector | THREE.Vector3,
+        distance: number
+    ): void {
+        const _direction = new Vector(direction.x, direction.y, direction.z);
+        const _target = new Vector(target.x, target.y, target.z);
+
+        const normalizedDirection = _direction.normalize();
+        const cameraPosition = _target.add(normalizedDirection.scale(distance));
+        this.camera.position.set(
+            cameraPosition.x,
+            cameraPosition.y,
+            cameraPosition.z
+        );
+        this.camera.lookAt(_target.x, _target.y, _target.z);
+        this.controls.target.set(_target.x, _target.y, _target.z);
+    }
+
+    public getVectorPanel(): VectorPanel {
+        return this.vectorPanel;
     }
 
     public update(): void {
