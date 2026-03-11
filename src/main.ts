@@ -11,25 +11,27 @@ if (!app) throw new Error("No #app element");
 const viewer = new GeometryViewer(app);
 const vectorPanel = viewer.getVectorPanel();
 
-const O = viewer.addPoint(1, 1, 0, "O");
-const A = viewer.addPoint(0, 0, 0, "A");
+const O = viewer.addPoint(0, 0, 0, "O");
 const B = viewer.addPoint(0, 0, 0, "B");
-const C = viewer.addPoint(0, 0, 0, "C");
-const D = viewer.addPoint(0, 0, 0, "D");
-const E = viewer.addPoint(0, 0, 0, "E");
-const F = viewer.addPoint(0, 0, 0, "F");
+const B1 = viewer.addPoint(0, 0, 0, "B1");
+const A = viewer.addPoint(0, 0, 0, "A");
+const A1 = viewer.addPoint(0, 0, 0, "A1");
+const A2 = viewer.addPoint(0, 0, 0, "A2");
+const A3 = viewer.addPoint(0, 0, 0, "A3");
+const A4 = viewer.addPoint(0, 0, 0, "A4");
 
-viewer.addLine(new Line(O.index, A.index));
-viewer.addLine(new Line(A.index, B.index));
-viewer.addLine(new Line(B.index, C.index));
-viewer.addLine(new Line(C.index, D.index));
-viewer.addLine(new Line(D.index, E.index));
-viewer.addLine(new Line(E.index, F.index));
+viewer.addLine(new Line(O.index, B1.index));
+viewer.addLine(new Line(B1.index, B.index));
+viewer.addLine(new Line(B.index, A.index));
+viewer.addLine(new Line(A.index, A1.index));
+viewer.addLine(new Line(A.index, A2.index));
+viewer.addLine(new Line(A.index, A3.index));
+viewer.addLine(new Line(A.index, A4.index));
 
 // Resize
 window.addEventListener("resize", () => viewer.resize());
 
-const xyz = new Base();
+const sue = new Base();
 
 let stopTime = false;
 let stopCamera = false;
@@ -66,44 +68,52 @@ speedChart.addDataset("Velocity");
 speedChart.addDataset("Acceleration");
 
 function animate() {
+    const L1 = 2;
+    const L2 = 1;
+    const H = 0.2;
+    const R = 0.5;
+
     const t = stopTime ? lastTime : Date.now() * 0.001;
     if (!stopTime) lastTime = t;
 
-    const vectorOA = new Vector(0, 0, 1);
-    A.position.set(...O.position.add(vectorOA).array());
+    const xyz = new Base({ base: sue, axis: Axis.Z, angle: t });
 
-    const base1 = new Base({ base: xyz, axis: Axis.Z, angle: t });
+    const vectorOB1 = xyz.convertVector(new Vector(0, L1, 0));
+    B1.position.set(...O.position.add(vectorOB1).array());
 
-    const vectorAB = base1.convertVector(new Vector(1, 0, 0));
-    B.position.set(...A.position.add(vectorAB).array());
+    const vectorB1B = xyz.convertVector(new Vector(0, 0, H));
+    B.position.set(...B1.position.add(vectorB1B).array());
 
-    const vectorBC = base1.convertVector(new Vector(0, 0, 0.4));
-    C.position.set(...B.position.add(vectorBC).array());
+    const abc = new Base({ base: xyz, axis: Axis.X, angle: Math.cos(t) / 2 });
 
-    const base2 = new Base({ base: base1, axis: Axis.Z, angle: 1 * t });
+    const vectorBC = abc.convertVector(new Vector(0, L2, 0));
+    A.position.set(...B.position.add(vectorBC).array());
 
-    const vectorCD = base2.convertVector(new Vector(0, 0.6, 0));
-    D.position.set(...C.position.add(vectorCD).array());
+    const dis = new Base({ base: abc, axis: Axis.Y, angle: t });
 
-    const vectorDE = base2.convertVector(new Vector(0.2, 0, 0));
-    E.position.set(...D.position.add(vectorDE).array());
+    const vectorAA1 = dis.convertVector(new Vector(0, 0, -R));
+    A1.position.set(...A.position.add(vectorAA1).array());
 
-    const base3 = new Base({ base: base2, axis: Axis.X, angle: 6 * t });
+    const vectorAA2 = dis.convertVector(new Vector(0, 0, R));
+    A2.position.set(...A.position.add(vectorAA2).array());
 
-    const vectorEF = base3.convertVector(new Vector(0, 0.2, 0));
-    F.position.set(...E.position.add(vectorEF).array());
+    const vectorAA3 = dis.convertVector(new Vector(R, 0, 0));
+    A3.position.set(...A.position.add(vectorAA3).array());
 
-    speedChart.addValue("Velocity", F.position.x);
-    speedChart.addValue(
-        "Acceleration",
-        (speedChart.getDatasetLatestValue("Velocity") ?? 0) * 100
-    );
-    speedChart.update();
+    const vectorAA4 = dis.convertVector(new Vector(-R, 0, 0));
+    A4.position.set(...A.position.add(vectorAA4).array());
+
+    // speedChart.addValue("Velocity", F.position.x);
+    // speedChart.addValue(
+    //     "Acceleration",
+    //     (speedChart.getDatasetLatestValue("Velocity") ?? 0) * 100
+    // );
+    // speedChart.update();
 
     if (!stopCamera) {
         viewer.setCameraLookAt(
-            F.position,
-            base3.convertVector(new Vector(1, 0, 0)),
+            B.position,
+            xyz.convertVector(new Vector(1, -1, 1)),
             4
         );
     }
@@ -111,10 +121,11 @@ function animate() {
     vectorPanel.updatePoint(O);
     vectorPanel.updatePoint(A);
     vectorPanel.updatePoint(B);
-    vectorPanel.updatePoint(C);
-    vectorPanel.updatePoint(D);
-    vectorPanel.updatePoint(E);
-    vectorPanel.updatePoint(F);
+    vectorPanel.updatePoint(B1);
+    vectorPanel.updatePoint(A1);
+    vectorPanel.updatePoint(A2);
+    vectorPanel.updatePoint(A3);
+    vectorPanel.updatePoint(A4);
 
     viewer.update();
 
