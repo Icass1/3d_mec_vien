@@ -173,8 +173,8 @@ export class GeometryViewer {
         return mesh;
     }
 
-    addPoint(x: number, y: number, z: number, name: string): Point {
-        const position = new Vector(x, y, z);
+    addPoint(name: string): Point {
+        const position = new Vector(0, 0, 0);
         const index = this.points.length;
         const point = new Point(position, COLORS[index], name, index);
         this.points.push(point);

@@ -4,12 +4,12 @@ import { Vector } from "./Vector";
 
 type Params = {
     base: Base;
-    axis: typeof Axis[keyof typeof Axis];
+    axis: (typeof Axis)[keyof typeof Axis];
     angle: number;
 };
 
 export class Base {
-    public axis?: typeof Axis[keyof typeof Axis];
+    public axis?: (typeof Axis)[keyof typeof Axis];
     public angle?: number;
     public base?: Base;
 
