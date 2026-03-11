@@ -4,12 +4,12 @@ import { Vector } from "./Vector";
 
 type Params = {
     base: Base;
-    axis: Axis;
+    axis: typeof Axis[keyof typeof Axis];
     angle: number;
 };
 
 export class Base {
-    public axis?: Axis;
+    public axis?: typeof Axis[keyof typeof Axis];
     public angle?: number;
     public base?: Base;
 
@@ -59,6 +59,8 @@ export class Base {
                     [0, 0, 1],
                 ]);
                 break;
+            default:
+                return vector;
         }
         outVector = matrix.multipyWithVector(vector);
         return this.base.convertVector(outVector);

@@ -93,21 +93,10 @@ function animate() {
     const vectorEF = base3.convertVector(new Vector(0, 0.2, 0));
     F.position.set(...E.position.add(vectorEF).array());
 
-    // if (prevTime > 0) {
-    //     const dt = t - prevTime;
-    //     if (dt > 0) {
-    //         const dx = F.position.x - prevX;
-    //         const speed = dx / dt;
-    //         speedChart.addDataPoint((Date.now() - startDate) / 1000, speed);
-    //     }
-    // }
-    // prevTime = t;
-    // prevX = F.position.x;
-
     speedChart.addValue("Velocity", F.position.x);
     speedChart.addValue(
         "Acceleration",
-        (speedChart.getDatasetLatestValue("Velocity") ?? 0)*100
+        (speedChart.getDatasetLatestValue("Velocity") ?? 0) * 100
     );
     speedChart.update();
 
