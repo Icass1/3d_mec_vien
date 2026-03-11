@@ -1,81 +1,58 @@
-# Three.js TypeScript Template
+# 3D Mechanical Linkage Visualizer
 
-A fully typed Three.js template with custom axes, points, and lines.
+A TypeScript Three.js application for visualizing 3D mechanical linkages with real-time coordinate transformations, animations, and data plotting.
 
 ## Features
 
-- **Strict TypeScript**: All code is fully typed with strict mode enabled.
-- **Custom Axis Helper**: Pretty colored X, Y, Z axes with labels.
-- **Points**: Create 3D points in space as spheres.
-- **Lines**: Draw lines between points in 3D space.
-- **Modular Design**: Separate classes for AxisHelper, Point, and Line.
+- **3D Visualization**: Render points, lines, and coordinate axes in 3D space
+- **Coordinate Systems**: Support for hierarchical base transformations (rotations around X, Y, Z axes)
+- **Vector Math**: Custom Vector and Matrix classes for 3D calculations
+- **Mechanical Animation**: Animate multi-linkage mechanisms with chained coordinate transformations
+- **Real-time Charts**: Live velocity and acceleration plotting
+- **Interactive Controls**: Stop/resume time and camera rotation
+- **Vector Panel**: Display coordinates of all points in the scene
 
 ## Setup
 
-1. Install dependencies:
-
-    ```bash
-    npm install
-    ```
-
-2. Build the project:
-
-    ```bash
-    npm run build
-    ```
-
-3. Start a local server:
-
-    ```bash
-    npm start
-    ```
-
-4. Open your browser to `http://localhost:3000`
-
-## Usage
-
-The template includes a `SceneManager` class that handles the Three.js scene setup. You can add points and lines like this:
-
-```typescript
-const sceneManager = new SceneManager();
-
-// Add a point
-const point = sceneManager.addPoint(
-    { x: 1, y: 1, z: 1 },
-    new THREE.Color(0xff0000)
-);
-
-// Add a line between two points
-const line = sceneManager.addLine(
-    { x: 0, y: 0, z: 0 },
-    { x: 1, y: 1, z: 1 },
-    new THREE.Color(0x0000ff)
-);
+```bash
+npm install
+npm run build
+npm start
 ```
 
-## Classes
+Open `http://localhost:3000` in your browser.
 
-- `AxisHelper`: Creates colored axes with labels
-- `Point`: Represents a 3D point as a sphere
-- `Line`: Represents a line between two points
-- `SceneManager`: Manages the entire 3D scene
+## Project Structure
 
-## Customization
+| File | Description |
+|------|-------------|
+| `Base.ts` | Coordinate base with rotation transformations |
+| `Vector.ts` | 3D vector math operations |
+| `Matrix.ts` | 3x3 matrix operations |
+| `Point.ts` | 3D point as a sphere with label |
+| `Line.ts` | Line connecting two points |
+| `Axis.ts` | Axis enumeration (X, Y, Z) |
+| `SpeedChart.ts` | Real-time velocity/acceleration chart |
+| `VectorPanel.ts` | UI panel showing point coordinates |
+| `geometry-viewer.ts` | Main Three.js scene manager |
 
-You can customize the axis appearance by modifying the `AxisConfig` in `main.ts`:
+## Usage Example
 
 ```typescript
-const axisConfig: AxisConfig = {
-    size: 5,
-    colors: {
-        x: new THREE.Color(0xff0000), // Red
-        y: new THREE.Color(0x00ff00), // Green
-        z: new THREE.Color(0x0000ff), // Blue
-    },
-    labels: {
-        x: "X",
-        y: "Y",
-        z: "Z",
-    },
-};
+const viewer = new GeometryViewer(app);
+
+// Add points
+const origin = viewer.addPoint(0, 0, 0, "O");
+const pointA = viewer.addPoint(1, 0, 0, "A");
+
+// Connect with a line
+viewer.addLine(new Line(origin.index, pointA.index));
+
+// Create rotating base
+const base = new Base({ base: globalBase, axis: Axis.Z, angle: time });
+const rotatedVector = base.convertVector(new Vector(1, 0, 0));
 ```
+
+## Demo
+
+The default demo shows a 6-segment mechanical linkage where each segment rotates at different speeds around different axes, demonstrating chained coordinate transformations.
