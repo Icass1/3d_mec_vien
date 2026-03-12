@@ -5,7 +5,7 @@ Chart.register(...registerables);
 
 export class SpeedChart {
     private chart: Chart;
-    private readonly maxDataPoints = 1000;
+    private readonly maxDataPoints = 500;
     private times: number[] = [];
     private datasets: {
         [key: string]: {

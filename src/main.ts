@@ -117,7 +117,13 @@ const vectorADis4 = dis.convertVector(
 );
 Dis4.position.addModify(A.position.add(vectorADis4));
 
-console.log(Dis1.position.x.expression());
+console.log(B.position.x.expression());
+console.log(B.position.y.expression());
+console.log(B.position.z.expression());
+
+console.log(A.position.x.expression());
+console.log(A.position.y.expression());
+console.log(A.position.z.expression());
 
 let lastTime = Date.now() - 1000;
 let t: number = 0;
