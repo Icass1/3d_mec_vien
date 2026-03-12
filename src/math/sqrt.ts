@@ -27,12 +27,12 @@ export class Sqrt implements IMathObject {
         return new Substract(this, value);
     }
 
-    expression(visited: Set<IMathObject> = new Set()) {
+    expression(latex: boolean, visited: Set<IMathObject> = new Set()) {
         if (visited.has(this)) throw `<${this.constructor.name} cycle>`;
         visited.add(this);
 
         const visited1 = new Set(visited);
-        return `sqrt(${this._value.expression(visited1)})`;
+        return `sqrt(${this._value.expression(latex, visited1)})`;
     }
 
     compute(context: ContextType, visited: Set<IMathObject> = new Set()) {

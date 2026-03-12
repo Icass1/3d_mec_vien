@@ -26,7 +26,7 @@ export class Add implements IMathObject {
         return new Substract(this, value);
     }
 
-    expression(visited: Set<IMathObject> = new Set()) {
+    expression(latex: boolean, visited: Set<IMathObject> = new Set()) {
         if (visited.has(this)) throw `<${this.constructor.name} cycle>`;
         visited.add(this);
 
@@ -34,12 +34,12 @@ export class Add implements IMathObject {
             this._values
                 .filter((value) => {
                     const v = new Set(visited);
-                    const expr = value.expression(v);
+                    const expr = value.expression(latex, v);
                     return expr !== "0" && expr !== "(0)";
                 })
                 .map((value) => {
                     const v = new Set(visited);
-                    return value.expression(v);
+                    return value.expression(latex, v);
                 })
                 .join("+") || "0"
         );

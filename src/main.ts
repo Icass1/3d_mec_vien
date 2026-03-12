@@ -8,6 +8,7 @@ import { Axis } from "./Axis.js";
 import { Vector } from "./Vector.js";
 import { Line } from "./Line.js";
 import { Cos } from "./math/cos.js";
+import { MathUtils } from "./math/utils.js";
 
 const app = document.getElementById("app") as HTMLElement;
 if (!app) throw new Error("No #app element");
@@ -67,8 +68,8 @@ viewer.addLines({
 });
 
 const T = new Variable("t");
-const L1 = new Variable("l_{1}");
-const L2 = new Variable("l_{2}");
+const L1 = new Variable("l1");
+const L2 = new Variable("l2");
 const H = new Variable("h");
 const R = new Variable("r");
 const phi = T.divide(new Constant(10));
@@ -117,13 +118,17 @@ const vectorADis4 = dis.convertVector(
 );
 Dis4.position.addModify(A.position.add(vectorADis4));
 
-console.log(B.position.x.expression());
-console.log(B.position.y.expression());
-console.log(B.position.z.expression());
+const mathUtils = new MathUtils(Variable.variables);
 
-console.log(A.position.x.expression());
-console.log(A.position.y.expression());
-console.log(A.position.z.expression());
+const simplified = mathUtils.factorAndLatex(Dis1.position.x.expression(false));
+console.log(simplified.factored.toString());
+console.log(simplified.latex);
+// console.log(B.position.y.expression());
+// console.log(B.position.z.expression());
+
+// console.log(A.position.x.expression());
+// console.log(A.position.y.expression());
+// console.log(A.position.z.expression());
 
 let lastTime = Date.now() - 1000;
 let t: number = 0;
@@ -135,10 +140,10 @@ function animate() {
 
     const context = {
         t: t,
-        "l_{1}": 1,
-        "l_{2}": 2,
-        h: 1,
-        r: 0.4,
+        l1: 1,
+        l2: 2,
+        h: 10,
+        r: 1,
     };
 
     speedChart.addValue("Velocity", t, Dis1.position.x.compute(context));

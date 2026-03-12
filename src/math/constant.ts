@@ -26,7 +26,7 @@ export class Constant implements IMathObject {
     substract(value: IMathObject) {
         return new Substract(this, value);
     }
-    expression(visited: Set<IMathObject> = new Set()) {
+    expression(latex: boolean, visited: Set<IMathObject> = new Set()) {
         if (visited.has(this)) throw `<${this.constructor.name} cycle>`;
         visited.add(this);
         return `(${this._value})`;

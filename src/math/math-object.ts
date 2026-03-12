@@ -9,6 +9,6 @@ export interface IMathObject {
     add: (value: IMathObject) => Add;
     substract: (value: IMathObject) => Substract;
     divide: (value: IMathObject) => Divide;
-    expression: (visited?: Set<IMathObject>) => string;
+    expression: (latex: boolean, visited?: Set<IMathObject>) => string;
     compute: (context: ContextType, visited?: Set<IMathObject>) => number;
 }

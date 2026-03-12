@@ -7,8 +7,11 @@ import { Substract } from "./substract";
 
 export class Variable implements IMathObject {
     private _name: string;
+    static variables: string[] = [];
+
     constructor(name: string) {
         this._name = name;
+        Variable.variables.push(name);
     }
 
     mul(value: IMathObject) {
@@ -27,9 +30,24 @@ export class Variable implements IMathObject {
         return new Substract(this, value);
     }
 
-    expression(visited: Set<IMathObject> = new Set()) {
+    expression(latex: boolean, visited: Set<IMathObject> = new Set()) {
         if (visited.has(this)) throw `<${this.constructor.name} cycle>`;
         visited.add(this);
+
+        if (!latex) {
+            return this._name;
+        }
+
+        // Convert trailing digits to LaTeX subscript
+        // e.g. "a23" -> "a_{23}"
+        const match = this._name.match(/^([a-zA-Z]+)(\d+)$/);
+
+        if (match) {
+            const [, base, digits] = match;
+            return `${base}_{${digits}}`;
+        }
+
+        // Otherwise return as-is
         return this._name;
     }
 

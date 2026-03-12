@@ -28,13 +28,13 @@ export class Substract implements IMathObject {
         return new Substract(this, value);
     }
 
-    expression(visited: Set<IMathObject> = new Set()) {
+    expression(latex: boolean, visited: Set<IMathObject> = new Set()) {
         if (visited.has(this)) throw `<${this.constructor.name} cycle>`;
         visited.add(this);
 
         const visited1 = new Set(visited);
         const visited2 = new Set(visited);
-        return `${this._value1.expression(visited1)}-${this._value2.expression(visited2)}`;
+        return `${this._value1.expression(latex, visited1)}-${this._value2.expression(latex, visited2)}`;
     }
 
     compute(context: ContextType, visited: Set<IMathObject> = new Set()) {
@@ -43,6 +43,9 @@ export class Substract implements IMathObject {
 
         const visited1 = new Set(visited);
         const visited2 = new Set(visited);
-        return this._value1.compute(context, visited1) - this._value2.compute(context, visited2);
+        return (
+            this._value1.compute(context, visited1) -
+            this._value2.compute(context, visited2)
+        );
     }
 }

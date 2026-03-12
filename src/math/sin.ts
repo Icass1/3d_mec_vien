@@ -27,12 +27,14 @@ export class Sin implements IMathObject {
         return new Substract(this, value);
     }
 
-    expression(visited: Set<IMathObject> = new Set()) {
+    expression(latex: boolean, visited: Set<IMathObject> = new Set()) {
         if (visited.has(this)) throw `<${this.constructor.name} cycle>`;
         visited.add(this);
 
         const visited1 = new Set(visited);
-        return `sin(${this._value.expression(visited1)})`;
+        if (latex)
+            return `\\sin\\left(${this._value.expression(latex, visited1)}\\right)`;
+        else return `sin(${this._value.expression(latex, visited1)})`;
     }
 
     compute(context: ContextType, visited: Set<IMathObject> = new Set()) {

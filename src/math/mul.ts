@@ -29,14 +29,14 @@ export class Mul implements IMathObject {
         return new Substract(this, value);
     }
 
-    expression(visited: Set<IMathObject> = new Set()) {
+    expression(latex: boolean, visited: Set<IMathObject> = new Set()) {
         if (visited.has(this)) throw `<${this.constructor.name} cycle>`;
         visited.add(this);
 
         const visited1 = new Set(visited);
         const visited2 = new Set(visited);
-        const expressionValue1 = this._value1.expression(visited1);
-        const expressionValue2 = this._value2.expression(visited2);
+        const expressionValue1 = this._value1.expression(latex, visited1);
+        const expressionValue2 = this._value2.expression(latex, visited2);
 
         if (
             expressionValue1 === "0" ||
@@ -45,7 +45,8 @@ export class Mul implements IMathObject {
             expressionValue2 === "(0)"
         )
             return "0";
-        return `${expressionValue1}*${expressionValue2}`;
+        if (latex) return `${expressionValue1}\\cdot(${expressionValue2})`;
+        else return `${expressionValue1}*${expressionValue2}`;
     }
 
     compute(context: ContextType, visited: Set<IMathObject> = new Set()) {
