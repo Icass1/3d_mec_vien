@@ -3,12 +3,13 @@ import type { ContextType } from "./contextType";
 import { Mul } from "./mul";
 import { Add } from "./add";
 import { Divide } from "./divide";
-import { Substract } from "./substract";
 
-export class Variable implements IMathObject {
-    private _name: string;
-    constructor(name: string) {
-        this._name = name;
+export class Substract implements IMathObject {
+    private _value1: IMathObject;
+    private _value2: IMathObject;
+    constructor(value1: IMathObject, value2: IMathObject) {
+        this._value1 = value1;
+        this._value2 = value2;
     }
 
     mul(value: IMathObject) {
@@ -30,15 +31,18 @@ export class Variable implements IMathObject {
     expression(visited: Set<IMathObject> = new Set()) {
         if (visited.has(this)) throw `<${this.constructor.name} cycle>`;
         visited.add(this);
-        return this._name;
+
+        const visited1 = new Set(visited);
+        const visited2 = new Set(visited);
+        return `${this._value1.expression(visited1)}-${this._value2.expression(visited2)}`;
     }
 
     compute(context: ContextType, visited: Set<IMathObject> = new Set()) {
         if (visited.has(this)) throw `<${this.constructor.name} cycle>`;
         visited.add(this);
-        if (context[this._name] === undefined)
-            throw `'${this._name} is not defined in context.'`;
 
-        return context[this._name];
+        const visited1 = new Set(visited);
+        const visited2 = new Set(visited);
+        return this._value1.compute(context, visited1) - this._value2.compute(context, visited2);
     }
 }

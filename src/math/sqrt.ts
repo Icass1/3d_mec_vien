@@ -1,14 +1,14 @@
-import type { IMathObject } from "./math-object";
-import type { ContextType } from "./contextType";
-import { Mul } from "./mul";
 import { Add } from "./add";
+import type { ContextType } from "./contextType";
 import { Divide } from "./divide";
+import type { IMathObject } from "./math-object";
+import { Mul } from "./mul";
 import { Substract } from "./substract";
 
-export class Variable implements IMathObject {
-    private _name: string;
-    constructor(name: string) {
-        this._name = name;
+export class Sqrt implements IMathObject {
+    private _value: IMathObject;
+    constructor(value: IMathObject) {
+        this._value = value;
     }
 
     mul(value: IMathObject) {
@@ -30,15 +30,16 @@ export class Variable implements IMathObject {
     expression(visited: Set<IMathObject> = new Set()) {
         if (visited.has(this)) throw `<${this.constructor.name} cycle>`;
         visited.add(this);
-        return this._name;
+
+        const visited1 = new Set(visited);
+        return `sqrt(${this._value.expression(visited1)})`;
     }
 
     compute(context: ContextType, visited: Set<IMathObject> = new Set()) {
         if (visited.has(this)) throw `<${this.constructor.name} cycle>`;
         visited.add(this);
-        if (context[this._name] === undefined)
-            throw `'${this._name} is not defined in context.'`;
 
-        return context[this._name];
+        const visited1 = new Set(visited);
+        return Math.sqrt(this._value.compute(context, visited1));
     }
 }

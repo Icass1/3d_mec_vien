@@ -5,10 +5,10 @@ import { Add } from "./add";
 import { Divide } from "./divide";
 import { Substract } from "./substract";
 
-export class Variable implements IMathObject {
-    private _name: string;
-    constructor(name: string) {
-        this._name = name;
+export class Constant implements IMathObject {
+    private _value: number;
+    constructor(value: number) {
+        this._value = value;
     }
 
     mul(value: IMathObject) {
@@ -26,19 +26,15 @@ export class Variable implements IMathObject {
     substract(value: IMathObject) {
         return new Substract(this, value);
     }
-
     expression(visited: Set<IMathObject> = new Set()) {
         if (visited.has(this)) throw `<${this.constructor.name} cycle>`;
         visited.add(this);
-        return this._name;
+        return `(${this._value})`;
     }
 
     compute(context: ContextType, visited: Set<IMathObject> = new Set()) {
         if (visited.has(this)) throw `<${this.constructor.name} cycle>`;
         visited.add(this);
-        if (context[this._name] === undefined)
-            throw `'${this._name} is not defined in context.'`;
-
-        return context[this._name];
+        return this._value;
     }
 }

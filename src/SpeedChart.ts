@@ -7,7 +7,6 @@ export class SpeedChart {
     private chart: Chart;
     private readonly maxDataPoints = 1000;
     private times: number[] = [];
-    private speeds: number[] = [];
     private datasets: {
         [key: string]: {
             prevValue: number;
@@ -15,11 +14,8 @@ export class SpeedChart {
             values: number[];
         };
     } = {};
-    private startTime: number;
 
     constructor(canvas: HTMLCanvasElement) {
-        this.startTime = Date.now();
-
         this.chart = new Chart(canvas, {
             type: "line",
             data: {
@@ -54,23 +50,26 @@ export class SpeedChart {
         });
     }
 
-    addValue(dataset: string, value: number) {
-        const deltaT = Date.now() - this.datasets[dataset].prevTime;
+    addValue(dataset: string, timeStamp: number, value: number) {
+        const deltaT = timeStamp - this.datasets[dataset].prevTime;
         const deltaValue = value - this.datasets[dataset].prevValue;
 
         this.datasets[dataset].values.push(deltaValue / deltaT);
 
         this.datasets[dataset].prevValue = value;
-        this.datasets[dataset].prevTime = Date.now();
+        this.datasets[dataset].prevTime = timeStamp;
     }
 
-    update() {
-        this.times.push(Math.round(Date.now() - this.startTime) / 1000);
+    update(timeStamp: number) {
+        this.times.push(Math.round(timeStamp) / 1000);
 
         if (this.times.length > this.maxDataPoints) {
             this.times.shift();
-            this.speeds.shift();
         }
+        Object.values(this.datasets).forEach((values) => {
+            if (values.values.length > this.maxDataPoints)
+                values.values.shift();
+        });
         this.chart.update("none");
     }
 
@@ -80,7 +79,6 @@ export class SpeedChart {
 
     clear(): void {
         this.times = [];
-        this.speeds = [];
         this.chart.update("none");
     }
 }

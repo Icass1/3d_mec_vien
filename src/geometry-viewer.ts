@@ -4,7 +4,8 @@ import { Point } from "./Point";
 import { Vector } from "./Vector";
 import { VectorPanel } from "./VectorPanel";
 import type { Line } from "./Line";
-import { COLORS } from "./constants";
+import type { IMathObject } from "./math/math-object";
+import type { ContextType } from "./math/contextType";
 
 export class GeometryViewer {
     private readonly scene: THREE.Scene;
@@ -19,8 +20,6 @@ export class GeometryViewer {
     private readonly lineMeshes: THREE.Mesh[] = [];
     private readonly guideLineMeshes: THREE.Mesh[] = [];
     private readonly arrowHelpers: THREE.ArrowHelper[] = [];
-
-    private readonly pointPositions: THREE.Vector3[] = [];
 
     private readonly LINE_DIAMETER = 0.04;
     private readonly POINT_DIAMETER = 0.12;
@@ -58,7 +57,6 @@ export class GeometryViewer {
         this.setupHelpers();
 
         this.resize();
-        this.update();
     }
 
     private setupLights(): void {
@@ -173,33 +171,33 @@ export class GeometryViewer {
         return mesh;
     }
 
-    addPoint(name: string): Point {
-        const position = new Vector(0, 0, 0);
-        const index = this.points.length;
-        const point = new Point(position, COLORS[index], name, index);
-        this.points.push(point);
-        this.pointPositions.push(position.toVector3());
+    addPoints(points: { [key: string]: Point }) {
+        Object.entries(points).forEach((entry) => {
+            const name = entry[0];
+            const point = entry[1];
 
-        const pointMesh = this.createPointMesh(
-            position.toVector3(),
-            new THREE.Color(point.color)
-        );
-        this.pointMeshes.push(pointMesh);
-        this.scene.add(pointMesh);
+            point.name = name;
+            this.points.push(point);
 
-        this.updateLinesGeometry();
-        return point;
+            const pointMesh = this.createPointMesh(
+                new THREE.Vector3(),
+                new THREE.Color(point.color)
+            );
+
+            this.pointMeshes.push(pointMesh);
+            this.scene.add(pointMesh);
+        });
     }
 
-    addLine(line: Line): void {
-        if (
-            line.startIndex >= this.points.length ||
-            line.endIndex >= this.points.length
-        ) {
-            throw new Error("Invalid point indices");
-        }
-        this.lines.push(line);
-        this.updateLinesGeometry();
+    addLines(lines: { [key: string]: Line }): void {
+        Object.entries(lines).forEach((entry) => {
+            const name = entry[0];
+            const line = entry[1];
+
+            line.name = name;
+
+            this.lines.push(line);
+        });
     }
 
     addArrow(
@@ -245,14 +243,15 @@ export class GeometryViewer {
         this.arrowHelpers.length = 0;
     }
 
-    private updatePointsGeometry(): void {
+    private updatePointsGeometry(context: ContextType): void {
         for (let i = 0; i < this.points.length; i++) {
-            this.pointMeshes[i].position.copy(this.points[i].position);
-            this.pointPositions[i] = this.points[i].position.toVector3();
+            this.pointMeshes[i].position.copy(
+                this.points[i].position.computeToVector3(context)
+            );
         }
     }
 
-    private updateLinesGeometry(): void {
+    private updateLinesGeometry(context: ContextType): void {
         for (const mesh of this.guideLineMeshes) {
             this.scene.remove(mesh);
             mesh.geometry.dispose();
@@ -268,15 +267,15 @@ export class GeometryViewer {
         this.lineMeshes.length = 0;
 
         for (const point of this.points) {
-            const x = point.position.x;
-            const y = point.position.y;
+            const x = point.position.x.compute(context, new Set());
+            const y = point.position.y.compute(context, new Set());
 
             const base = new THREE.Vector3(x, y, 0);
             const xAxis = new THREE.Vector3(x, 0, 0);
             const yAxis = new THREE.Vector3(0, y, 0);
 
             const guideLine = this.createCylinderBetweenPoints(
-                point.position.toVector3(),
+                point.position.computeToVector3(context, new Set()),
                 base,
                 this.LINE_DIAMETER * 0.5,
                 0x555577
@@ -304,8 +303,8 @@ export class GeometryViewer {
         }
 
         for (const line of this.lines) {
-            const start = this.pointPositions[line.startIndex];
-            const end = this.pointPositions[line.endIndex];
+            const start = line.startPoint.position.computeToVector3(context);
+            const end = line.endPoint.position.computeToVector3(context);
 
             const lineMesh = this.createCylinderBetweenPoints(
                 start,
@@ -327,9 +326,10 @@ export class GeometryViewer {
     }
 
     public setCameraLookAt(
-        target: Vector | THREE.Vector3,
-        direction: Vector | THREE.Vector3,
-        distance: number
+        target: Vector,
+        direction: Vector,
+        distance: IMathObject,
+        context: ContextType
     ): void {
         const _direction = new Vector(direction.x, direction.y, direction.z);
         const _target = new Vector(target.x, target.y, target.z);
@@ -337,21 +337,26 @@ export class GeometryViewer {
         const normalizedDirection = _direction.normalize();
         const cameraPosition = _target.add(normalizedDirection.scale(distance));
         this.camera.position.set(
-            cameraPosition.x,
-            cameraPosition.y,
-            cameraPosition.z
+            cameraPosition.x.compute(context, new Set()),
+            cameraPosition.y.compute(context, new Set()),
+            cameraPosition.z.compute(context, new Set())
         );
-        this.camera.lookAt(_target.x, _target.y, _target.z);
-        this.controls.target.set(_target.x, _target.y, _target.z);
+
+        const targetX = _target.x.compute(context, new Set());
+        const targetY = _target.y.compute(context, new Set());
+        const targetZ = _target.z.compute(context, new Set());
+
+        this.camera.lookAt(targetX, targetY, targetZ);
+        this.controls.target.set(targetX, targetY, targetZ);
     }
 
     public getVectorPanel(): VectorPanel {
         return this.vectorPanel;
     }
 
-    public update(): void {
-        this.updatePointsGeometry();
-        this.updateLinesGeometry();
+    public update(context: ContextType): void {
+        this.updatePointsGeometry(context);
+        this.updateLinesGeometry(context);
         this.controls.update();
         this.renderer.render(this.scene, this.camera);
     }

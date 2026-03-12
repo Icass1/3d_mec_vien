@@ -1,11 +1,14 @@
 import type { Point } from "./Point";
 
 export class Line {
-    public readonly startIndex: number;
-    public readonly endIndex: number;
+    public readonly startPoint: Point;
+    public readonly endPoint: Point;
+
+    public name: string;
 
     constructor(startPoint: Point, endPoint: Point) {
-        this.startIndex = startPoint.index;
-        this.endIndex = endPoint.index;
+        this.startPoint = startPoint;
+        this.endPoint = endPoint;
+        this.name = "";
     }
 }

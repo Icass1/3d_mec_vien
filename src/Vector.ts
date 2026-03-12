@@ -1,37 +1,60 @@
+import type { IMathObject } from "./math/math-object";
+import { Constant } from "./math/constant";
+import { Add } from "./math/add";
+import { Sqrt } from "./math/sqrt";
+import type { ContextType } from "./math/contextType";
 import * as THREE from "three";
 
 export class Vector {
-    x: number;
-    y: number;
-    z: number;
+    x: IMathObject;
+    y: IMathObject;
+    z: IMathObject;
 
-    constructor(x: number, y: number, z: number) {
+    constructor(x: IMathObject, y: IMathObject, z: IMathObject) {
         this.x = x;
         this.y = y;
         this.z = z;
     }
 
     add(other: Vector): Vector {
-        return new Vector(this.x + other.x, this.y + other.y, this.z + other.z);
+        return new Vector(
+            this.x.add(other.x),
+            this.y.add(other.y),
+            this.z.add(other.z)
+        );
     }
 
-    toVector3(): THREE.Vector3 {
-        return new THREE.Vector3(this.x, this.y, this.z);
+    addModify(other: Vector): void {
+        this.x = this.x.add(other.x);
+        this.y = this.y.add(other.y);
+        this.z = this.z.add(other.z);
     }
 
     subtract(other: Vector): Vector {
-        return new Vector(this.x - other.x, this.y - other.y, this.z - other.z);
+        return new Vector(
+            this.x.substract(other.x),
+            this.y.substract(other.y),
+            this.z.substract(other.z)
+        );
     }
 
-    scale(scalar: number): Vector {
-        return new Vector(this.x * scalar, this.y * scalar, this.z * scalar);
+    scale(scalar: IMathObject): Vector {
+        return new Vector(
+            this.x.mul(scalar),
+            this.y.mul(scalar),
+            this.z.mul(scalar)
+        );
     }
 
-    dot(other: Vector): number {
-        return this.x * other.x + this.y * other.y + this.z * other.z;
+    dot(other: Vector): IMathObject {
+        return new Add(
+            this.x.mul(other.x),
+            this.y.mul(other.y),
+            this.z.mul(other.z)
+        );
     }
 
-    set(x: number, y: number, z: number) {
+    set(x: IMathObject, y: IMathObject, z: IMathObject) {
         this.x = x;
         this.y = y;
         this.z = z;
@@ -39,26 +62,28 @@ export class Vector {
 
     cross(other: Vector): Vector {
         return new Vector(
-            this.y * other.z - this.z * other.y,
-            this.z * other.x - this.x * other.z,
-            this.x * other.y - this.y * other.x
+            this.y.mul(other.z).substract(this.z.mul(other.y)),
+            this.z.mul(other.x).substract(this.x.mul(other.z)),
+            this.x.mul(other.y).substract(this.y.mul(other.x))
         );
     }
 
-    length(): number {
-        return Math.sqrt(this.x ** 2 + this.y ** 2 + this.z ** 2);
+    length(): IMathObject {
+        return new Sqrt(
+            new Add(this.x.mul(this.x), this.y.mul(this.y), this.z.mul(this.z))
+        );
     }
 
     normalize(): Vector {
         const len = this.length();
-        if (len === 0) return new Vector(1, 0, 0);
-        return this.scale(1 / len);
+        return this.scale(new Constant(1).divide(len));
     }
 
-    dict(): { x: number; y: number; z: number } {
-        return { x: this.x, y: this.y, z: this.z };
-    }
-    array(): [number, number, number] {
-        return [this.x, this.y, this.z];
+    computeToVector3(context: ContextType, visited: Set<IMathObject> = new Set()) {
+        return new THREE.Vector3(
+            this.x.compute(context, new Set(visited)),
+            this.y.compute(context, new Set(visited)),
+            this.z.compute(context, new Set(visited))
+        );
     }
 }

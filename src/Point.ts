@@ -1,15 +1,22 @@
-import type { Vector } from "./Vector";
+import { COLORS } from "./constants";
+import { Constant } from "./math/constant";
+import { Vector } from "./Vector";
 
 export class Point {
     public readonly position: Vector;
     public color: string;
     public name: string;
-    public readonly index: number;
 
-    constructor(position: Vector, color: string, name: string, index: number) {
+    constructor(position: Vector, color: string) {
         this.position = position;
         this.color = color;
-        this.name = name;
-        this.index = index;
+        this.name = "";
+    }
+
+    static newPoint(): Point {
+        return new Point(
+            new Vector(new Constant(0), new Constant(0), new Constant(0)),
+            COLORS[0]
+        );
     }
 }

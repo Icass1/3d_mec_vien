@@ -1,41 +1,24 @@
 import { GeometryViewer } from "./geometry-viewer.js";
 import { Base } from "./Base.js";
-import { Line } from "./Line.js";
 import { SpeedChart } from "./SpeedChart.js";
 import { Variable } from "./math/variable.js";
-import { Cos } from "./math/cos.js";
-import { Mul } from "./math/mul.js";
+import { Point } from "./Point.js";
+import { Constant } from "./math/constant.js";
 import { Axis } from "./Axis.js";
+import { Vector } from "./Vector.js";
+import { Line } from "./Line.js";
+import { Cos } from "./math/cos.js";
 
 const app = document.getElementById("app") as HTMLElement;
 if (!app) throw new Error("No #app element");
 
 const viewer = new GeometryViewer(app);
-const vectorPanel = viewer.getVectorPanel();
 
-const O = viewer.addPoint("O");
-const B = viewer.addPoint("B");
-const B1 = viewer.addPoint("B1");
-const A = viewer.addPoint("A");
-const A1 = viewer.addPoint("A1");
-const A2 = viewer.addPoint("A2");
-const A3 = viewer.addPoint("A3");
-const A4 = viewer.addPoint("A4");
-
-viewer.addLine(new Line(O, B1));
-viewer.addLine(new Line(B1, B));
-viewer.addLine(new Line(B, A));
-viewer.addLine(new Line(A, A1));
-viewer.addLine(new Line(A, A2));
-viewer.addLine(new Line(A, A3));
-viewer.addLine(new Line(A, A4));
-
-// Resize
+// Resize.
 window.addEventListener("resize", () => viewer.resize());
 
 let stopTime = false;
 let stopCamera = false;
-let lastTime = 0;
 
 const btnStopTime = document.getElementById(
     "btn-stop-time"
@@ -62,22 +45,116 @@ const speedChart = new SpeedChart(speedChartCanvas);
 speedChart.addDataset("Velocity");
 speedChart.addDataset("Acceleration");
 
-const L1 = new Variable("L1");
-const cos = new Cos(L1);
-const theta = new Variable("theta");
+const O = Point.newPoint();
+const B1 = Point.newPoint();
+const B = Point.newPoint();
+const A = Point.newPoint();
 
-const cosSquared = new Mul(cos, cos);
+const Dis1 = Point.newPoint();
+const Dis2 = Point.newPoint();
+const Dis3 = Point.newPoint();
+const Dis4 = Point.newPoint();
 
-const context = { L1: 1 };
+viewer.addPoints({ O, B1, B, A, Dis1, Dis2, Dis3, Dis4 });
+viewer.addLines({
+    OB1: new Line(O, B1),
+    B1B: new Line(B1, B),
+    BA: new Line(B, A),
+    ADis1: new Line(A, Dis1),
+    ADis2: new Line(A, Dis2),
+    ADis3: new Line(A, Dis3),
+    ADis4: new Line(A, Dis4),
+});
 
-console.log(cos.compute(context));
-console.log(cosSquared.compute(context));
+const T = new Variable("t");
+const L1 = new Variable("l_{1}");
+const L2 = new Variable("l_{2}");
+const H = new Variable("h");
+const R = new Variable("r");
+const phi = T.divide(new Constant(10));
+const psi = new Cos(T.divide(new Constant(4))).mul(new Constant(0.4));
+const theta = T.divide(new Constant(2));
 
 const sue = new Base();
-const xyz = new Base({ base: sue, axis: Axis.Z, angle: theta });
+const xyz = new Base({ base: sue, axis: Axis.Z, angle: phi });
+const abc = new Base({ base: xyz, axis: Axis.X, angle: psi });
+const dis = new Base({ base: abc, axis: Axis.Y, angle: theta });
+
+O.position.set(new Constant(0), new Constant(0), new Constant(0));
+
+const vectorOB1 = xyz.convertVector(
+    new Vector(new Constant(0), L1, new Constant(0))
+);
+B1.position.addModify(O.position.add(vectorOB1));
+
+const vectorB1B = xyz.convertVector(
+    new Vector(new Constant(0), new Constant(0), H)
+);
+B.position.addModify(B1.position.add(vectorB1B));
+
+const vectorBA = abc.convertVector(
+    new Vector(new Constant(0), L2, new Constant(0))
+);
+A.position.addModify(B.position.add(vectorBA));
+
+const vectorADis1 = dis.convertVector(
+    new Vector(R, new Constant(0), new Constant(0))
+);
+Dis1.position.addModify(A.position.add(vectorADis1));
+
+const vectorADis2 = dis.convertVector(
+    new Vector(R.mul(new Constant(-1)), new Constant(0), new Constant(0))
+);
+Dis2.position.addModify(A.position.add(vectorADis2));
+
+const vectorADis3 = dis.convertVector(
+    new Vector(new Constant(0), new Constant(0), R)
+);
+Dis3.position.addModify(A.position.add(vectorADis3));
+
+const vectorADis4 = dis.convertVector(
+    new Vector(new Constant(0), new Constant(0), R.mul(new Constant(-1)))
+);
+Dis4.position.addModify(A.position.add(vectorADis4));
+
+console.log(Dis1.position.x.expression());
+
+let lastTime = Date.now() - 1000;
+let t: number = 0;
 
 function animate() {
-    viewer.update();
+    const now = Date.now();
+    if (!stopTime) t = t + (now - lastTime) * 0.02;
+    lastTime = now;
+
+    const context = {
+        t: t,
+        "l_{1}": 1,
+        "l_{2}": 2,
+        h: 1,
+        r: 0.4,
+    };
+
+    speedChart.addValue("Velocity", t, Dis1.position.x.compute(context));
+
+    speedChart.update(t);
+
+    viewer.setCameraLookAt(
+        B.position,
+
+        abc.convertVector(
+            new Vector(
+                new Constant(-0.1),
+                new Constant(-0.3),
+                new Constant(0.1)
+            )
+        ),
+
+        new Constant(3),
+        context
+    );
+
+    viewer.update(context);
 
     requestAnimationFrame(animate);
 }

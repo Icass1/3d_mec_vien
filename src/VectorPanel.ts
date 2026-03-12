@@ -126,48 +126,47 @@ export class VectorPanel {
         });
     }
 
-    updatePoint(point: Point): void {
-        const index = point.index;
-        const position = point.position;
-        const label = Object(point).name;
-        const color = point.color;
+    // updatePoint(point: Point): void {
+    //     const position = point.position;
+    //     const label = Object(point).name;
+    //     const color = point.color;
 
-        const content = this.panel.querySelector(".panel-content")!;
+    //     const content = this.panel.querySelector(".panel-content")!;
 
-        if (!this.items.has(index)) {
-            const item = document.createElement("div");
-            item.className = "item-row";
-            item.innerHTML = `
-                <div class="item-color"></div>
-                <div class="item-label"></div>
-                <div class="item-values">
-                    <span><span class="item-x">x:</span> <span class="val-x"></span></span>
-                    <span><span class="item-y">y:</span> <span class="val-y"></span></span>
-                    <span><span class="item-z">z:</span> <span class="val-z"></span></span>
-                    <span class="item-mag"></span>
-                </div>
-            `;
-            content.appendChild(item);
-            this.items.set(index, item);
-        }
+    //     if (!this.items.has(index)) {
+    //         const item = document.createElement("div");
+    //         item.className = "item-row";
+    //         item.innerHTML = `
+    //             <div class="item-color"></div>
+    //             <div class="item-label"></div>
+    //             <div class="item-values">
+    //                 <span><span class="item-x">x:</span> <span class="val-x"></span></span>
+    //                 <span><span class="item-y">y:</span> <span class="val-y"></span></span>
+    //                 <span><span class="item-z">z:</span> <span class="val-z"></span></span>
+    //                 <span class="item-mag"></span>
+    //             </div>
+    //         `;
+    //         content.appendChild(item);
+    //         this.items.set(index, item);
+    //     }
 
-        const item = this.items.get(index)!;
-        const colorEl = item.querySelector(".item-color") as HTMLElement;
-        const labelEl = item.querySelector(".item-label") as HTMLElement;
-        const valX = item.querySelector(".val-x") as HTMLElement;
-        const valY = item.querySelector(".val-y") as HTMLElement;
-        const valZ = item.querySelector(".val-z") as HTMLElement;
-        const magEl = item.querySelector(".item-mag") as HTMLElement;
+    //     const item = this.items.get(index)!;
+    //     const colorEl = item.querySelector(".item-color") as HTMLElement;
+    //     const labelEl = item.querySelector(".item-label") as HTMLElement;
+    //     const valX = item.querySelector(".val-x") as HTMLElement;
+    //     const valY = item.querySelector(".val-y") as HTMLElement;
+    //     const valZ = item.querySelector(".val-z") as HTMLElement;
+    //     const magEl = item.querySelector(".item-mag") as HTMLElement;
 
-        colorEl.style.backgroundColor = color;
-        labelEl.textContent = label;
-        valX.textContent = position.x.toFixed(3);
-        valY.textContent = position.y.toFixed(3);
-        valZ.textContent = position.z.toFixed(3);
+    //     colorEl.style.backgroundColor = color;
+    //     labelEl.textContent = label;
+    //     valX.textContent = position.x.toFixed(3);
+    //     valY.textContent = position.y.toFixed(3);
+    //     valZ.textContent = position.z.toFixed(3);
 
-        const mag = position.length();
-        magEl.textContent = `|${label}|=${mag.toFixed(3)}`;
-    }
+    //     const mag = position.length();
+    //     magEl.textContent = `|${label}|=${mag.toFixed(3)}`;
+    // }
 
     remove(index: number): void {
         const item = this.items.get(index);
