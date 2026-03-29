@@ -34,4 +34,19 @@ export class Matrix {
             )
         );
     }
+
+    multiply(other: Matrix): Matrix {
+        const result: IMathObject[][] = [];
+        for (let i = 0; i < 3; i++) {
+            result[i] = [];
+            for (let j = 0; j < 3; j++) {
+                const term1 = this.matrix[i][0].mul(other.matrix[0][j]);
+                const term2 = this.matrix[i][1].mul(other.matrix[1][j]);
+                const term3 = this.matrix[i][2].mul(other.matrix[2][j]);
+                const sum = term1.add(term2).add(term3);
+                result[i][j] = sum;
+            }
+        }
+        return new Matrix(result);
+    }
 }

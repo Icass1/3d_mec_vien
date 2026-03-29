@@ -266,41 +266,41 @@ export class GeometryViewer {
         }
         this.lineMeshes.length = 0;
 
-        for (const point of this.points) {
-            const x = point.position.x.compute(context, new Set());
-            const y = point.position.y.compute(context, new Set());
+        // for (const point of this.points) {
+        //     const x = point.position.x.compute(context, new Set());
+        //     const y = point.position.y.compute(context, new Set());
 
-            const base = new THREE.Vector3(x, y, 0);
-            const xAxis = new THREE.Vector3(x, 0, 0);
-            const yAxis = new THREE.Vector3(0, y, 0);
+        //     const base = new THREE.Vector3(x, y, 0);
+        //     const xAxis = new THREE.Vector3(x, 0, 0);
+        //     const yAxis = new THREE.Vector3(0, y, 0);
 
-            const guideLine = this.createCylinderBetweenPoints(
-                point.position.computeToVector3(context, new Set()),
-                base,
-                this.LINE_DIAMETER * 0.5,
-                0x555577
-            );
-            this.guideLineMeshes.push(guideLine);
-            this.scene.add(guideLine);
+        //     const guideLine = this.createCylinderBetweenPoints(
+        //         point.position.computeToVector3(context, new Set()),
+        //         base,
+        //         this.LINE_DIAMETER * 0.5,
+        //         0x555577
+        //     );
+        //     this.guideLineMeshes.push(guideLine);
+        //     this.scene.add(guideLine);
 
-            const guideLine2 = this.createCylinderBetweenPoints(
-                base,
-                xAxis,
-                this.LINE_DIAMETER * 0.5,
-                0x555577
-            );
-            this.guideLineMeshes.push(guideLine2);
-            this.scene.add(guideLine2);
+        //     const guideLine2 = this.createCylinderBetweenPoints(
+        //         base,
+        //         xAxis,
+        //         this.LINE_DIAMETER * 0.5,
+        //         0x555577
+        //     );
+        //     this.guideLineMeshes.push(guideLine2);
+        //     this.scene.add(guideLine2);
 
-            const guideLine3 = this.createCylinderBetweenPoints(
-                base,
-                yAxis,
-                this.LINE_DIAMETER * 0.5,
-                0x555577
-            );
-            this.guideLineMeshes.push(guideLine3);
-            this.scene.add(guideLine3);
-        }
+        //     const guideLine3 = this.createCylinderBetweenPoints(
+        //         base,
+        //         yAxis,
+        //         this.LINE_DIAMETER * 0.5,
+        //         0x555577
+        //     );
+        //     this.guideLineMeshes.push(guideLine3);
+        //     this.scene.add(guideLine3);
+        // }
 
         for (const line of this.lines) {
             const start = line.startPoint.position.computeToVector3(context);
@@ -347,6 +347,19 @@ export class GeometryViewer {
         const targetZ = _target.z.compute(context, new Set());
 
         this.camera.lookAt(targetX, targetY, targetZ);
+        this.controls.target.set(targetX, targetY, targetZ);
+    }
+
+    public setCameraTarget(
+        target: Vector,
+        context: ContextType
+    ): void {
+        const _target = new Vector(target.x, target.y, target.z);
+
+        const targetX = _target.x.compute(context, new Set());
+        const targetY = _target.y.compute(context, new Set());
+        const targetZ = _target.z.compute(context, new Set());
+
         this.controls.target.set(targetX, targetY, targetZ);
     }
 
